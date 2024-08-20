@@ -1,0 +1,11 @@
+serverGroups,reachable,osType,state,serverIp,agentId,name,description,id
+Group1,True,Windows,Active,192.168.1.1,1001,ServerA,Main application server,1
+Group2,False,Linux,Inactive,192.168.1.2,1002,ServerB,Backup server,2
+Group1,True,Windows,Active,192.168.1.3,1003,ServerC,Database server,3
+Group3,True,Linux,Maintenance,192.168.1.4,1004,ServerD,Web server,4
+Group2,False,Windows,Inactive,192.168.1.5,1005,ServerE,File server,5
+Group1,True,Linux,Active,192.168.1.6,1006,ServerF,Test server,6
+Group3,True,Windows,Active,192.168.1.7,1007,ServerG,Development server,7
+Group2,False,Linux,Inactive,192.168.1.8,1008,ServerH,Staging server,8
+Group1,True,Windows,Active,192.168.1.9,1009,ServerI,Production server,9
+Group3,True,Linux,Maintenance,192.168.1.10,1010,ServerJ,Legacy server,10

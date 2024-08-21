@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+AddElementTag("customContainer", $fontColor=$ELEMENT_FONT_COLOR, $bgColor="#0073B7", $shape=EightSidedShape(), $legendText="Custom Code")
+
+LAYOUT_LANDSCAPE()
+
+title Nolio Infrastructure
+
+System_Boundary(ca_release_automation, "Nolio Infrastructure") {
+
+    Container(ManagementServer, "Management Server", "Centralized Server", "Sends instructions to Execution Servers and Agents, includes the UI server", $tags="customContainer")
+    Container(Repository, "Repository", "Storage Server", "Provides storage for artifacts and actions", $tags="customContainer")
+    Container(ExecutionServer, "Execution Server", "Intermediate Server", "Channels instructions from Management Server to Agents", $tags="customContainer")
+    Container(Agent, "Agent", "Client-side Component", "Executes actions on the target environment", $tags="customContainer")
+}
+
+Rel(ManagementServer, ExecutionServer, "Sends instructions", "Execution & Administration")
+Rel(ExecutionServer, Agent, "Channels instructions", "Execution & Administration")
+Rel(ManagementServer, Repository, "Accesses artifacts and actions", "Storage")
+Rel(Repository, ExecutionServer, "Provides artifacts", "Deployment")
+
+@enduml

@@ -1,0 +1,40 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_LANDSCAPE()
+
+title Simplified High Availability Deployment for Nolio
+
+System_Boundary(ca_release_automation_ha, "Nolio - HA Deployment") {
+
+    ContainerDb(RepositoryDB, "Repository Database Server", "Database", "Stores artifacts and actions")
+    ContainerDb(DatabaseServer, "Database Server", "Database", "Stores configuration and state")
+
+    Container(RepositoryServer, "Repository Server", "Server", "Manages artifacts storage")
+    Container(LoadBalancer, "Load Balancer", "Load Balancer", "Distributes traffic to Management Servers")
+
+    Container(ManagementServer1, "Management Server 1", "Centralized Server", "Sends instructions, includes UI server")
+    Container(ManagementServer2, "Management Server 2", "Centralized Server", "Sends instructions, includes UI server")
+
+    Container(ExecutionServersGroup1, "Execution Servers Group 1 (Multiple Instances)", "Intermediate Server", "Channels instructions from Management Servers to Agents")
+    Container(ExecutionServersGroup2, "Execution Servers Group 2 (Multiple Instances)", "Intermediate Server", "Channels instructions from Management Servers to Agents")
+
+    Container(AgentNodesGroup1, "Agent Nodes Group 1 (Multiple Instances)", "Client-side Component", "Executes actions on the target environment")
+    Container(AgentNodesGroup2, "Agent Nodes Group 2 (Multiple Instances)", "Client-side Component", "Executes actions on the target environment")
+}
+
+' Relationships
+Rel(RepositoryDB, RepositoryServer, "Stores artifacts")
+Rel(RepositoryServer, ManagementServer1, "Provides artifacts")
+Rel(RepositoryServer, ManagementServer2, "Provides artifacts")
+Rel(LoadBalancer, ManagementServer1, "Distributes requests")
+Rel(LoadBalancer, ManagementServer2, "Distributes requests")
+Rel(ManagementServer1, DatabaseServer, "Reads/Writes data")
+Rel(ManagementServer2, DatabaseServer, "Reads/Writes data")
+Rel(ManagementServer1, ExecutionServersGroup1, "Sends instructions")
+Rel(ManagementServer2, ExecutionServersGroup2, "Sends instructions")
+Rel(ExecutionServersGroup1, AgentNodesGroup1, "Channels instructions")
+Rel(ExecutionServersGroup2, AgentNodesGroup2, "Channels instructions")
+
+@enduml

@@ -1,54 +1,55 @@
 import pandas as pd
+from tabulate import tabulate
 
-df = pd.read_csv('sample_data.csv')
+# Load data from CSV
+df = pd.read_csv('deployments.csv')
 
-# Total Number of Deployments
-total_deployments = df['Number of Nolio Deployments'].sum()
+# Strip any whitespace from column names
+df.columns = df.columns.str.strip()
 
-# Average Number of Deployments per Application
-average_deployments = df['Number of Nolio Deployments'].mean()
+# Configuration for column names
+column_config = {
+    'app_name': 'AppName',
+    'lob': 'LOB',
+    'environment': 'Environment',
+    'criticality': 'Criticality',
+    'strategy': 'Strategy',
+    'offering_status': 'OfferingStatus',
+    'deployments': 'Deployments'
+}
 
-# Distribution of Applications by Architecture Model
-architecture_distribution = df['Architecture Model'].value_counts()
+# 1. Calculate the total number of unique applications and sum of deployments per LOB
+total_apps_per_lob = df.groupby(column_config['lob']).agg(
+    Total_Apps=(column_config['app_name'], 'nunique'),
+    Total_Deployments=(column_config['deployments'], 'sum')
+).reset_index()
 
-# Count of Applications by Operational Status
-operational_status_count = df['Operational Status'].value_counts()
+# 2. Calculate the number of applications in Prod, UAT, and Dev environments per LOB
+env_counts = df.groupby([column_config['lob'], column_config['environment']])[column_config['app_name']].nunique().unstack(fill_value=0).reset_index()
+env_counts.columns.name = None  # Remove the name from columns for easier access
+env_counts = env_counts.rename(columns={'Prod': 'Prod Apps', 'UAT': 'UAT Apps', 'Dev': 'Dev Apps'})
 
-# Average Availability Rating
-average_availability_rating = df['Availability Rating'].mean()
+# 3. Identify the most critical application in Prod for each LOB and its details
+prod_critical = df[df[column_config['environment']] == 'Prod'].sort_values(
+    [column_config['criticality'], column_config['strategy']], ascending=[True, True])
+most_critical_prod = prod_critical.groupby(column_config['lob']).first().reset_index()
 
-# Distribution of Resilience Categories
-resilience_distribution = df['Resilience Category'].value_counts()
+# 4. Merge the results into a single DataFrame
+result = pd.merge(total_apps_per_lob, env_counts, on=column_config['lob'])
+result = pd.merge(result, most_critical_prod[
+    [column_config['lob'], column_config['app_name'], column_config['deployments'], column_config['criticality'], column_config['strategy'], column_config['offering_status']]
+], on=column_config['lob'])
 
-# Service Classification Frequency
-service_classification_frequency = df['Service Classification'].value_counts()
+result = result.rename(columns={
+    column_config['app_name']: 'Most Critical Prod App',
+    column_config['deployments']: 'Deployments',
+    column_config['strategy']: 'Strategy',
+    column_config['criticality']: 'Criticality',
+    column_config['offering_status']: 'OfferingStatus'
+})
 
-# Number of Applications per Developer/Team
-applications_per_developer = df.groupby('Developed By').size()
+# 5. Write the result to a Markdown file
+with open('result_summary.md', 'w') as f:
+    f.write(tabulate(result, headers='keys', tablefmt='pipe', showindex=False))
 
-# Average Time Between Updates
-df['Created'] = pd.to_datetime(df['Created'])
-df['Updated'] = pd.to_datetime(df['Updated'])
-df['Time Between Updates'] = (df['Updated'] - df['Created']).dt.days
-average_time_between_updates = df['Time Between Updates'].mean()
-
-# Average Security Rating
-average_security_rating = df['Security Rating'].mean()
-
-# Percentage of Applications Meeting Compliance Deadlines
-current_date = pd.Timestamp('today')  # Or any specific date you are assessing against
-df['ACA Next Due Date'] = pd.to_datetime(df['ACA Next Due Date'])
-compliance_meeting = (df['ACA Next Due Date'] > current_date).mean() * 100
-
-# Print the summary statistics
-print(f"Total Number of Deployments: {total_deployments}")
-print(f"Average Number of Deployments per Application: {average_deployments:.2f}")
-print("Distribution of Applications by Architecture Model:", architecture_distribution)
-print("Count of Applications by Operational Status:", operational_status_count)
-print(f"Average Availability Rating: {average_availability_rating:.2f}")
-print("Distribution of Resilience Categories:", resilience_distribution)
-print("Service Classification Frequency:", service_classification_frequency)
-print("Number of Applications per Developer/Team:", applications_per_developer)
-print(f"Average Time Between Updates: {average_time_between_updates:.2f} days")
-print(f"Average Security Rating: {average_security_rating:.2f}")
-print(f"Percentage of Applications Meeting Compliance Deadlines: {compliance_meeting:.2f}%")
+print("Results written to 'deployments.md'")

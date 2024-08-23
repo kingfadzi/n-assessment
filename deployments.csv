@@ -1,0 +1,10 @@
+AppName,LOB,Environment,Criticality,Strategy,OfferingStatus
+IB.RNA-FOO,Markets Pre Trade,Prod,B,Maintain,Operational
+IB.RNA-FOO,Markets Pre Trade,UAT,B,Maintain,Operational
+IB.RNA-FOO,Markets Pre Trade,Dev,B,Maintain,Operational
+IB.RNA-BAR,Wealth Post Trade,Prod,A,Improve,Maintenance
+IB.RNA-BAR,Wealth Post Trade,UAT,A,Improve,Maintenance
+IB.RNA-BAR,Wealth Post Trade,Dev,A,Improve,Maintenance
+IB.RNA-BAZ,Corporate Banking,Prod,C,Decommission,Retired
+IB.RNA-BAZ,Corporate Banking,UAT,C,Decommission,Retired
+IB.RNA-BAZ,Corporate Banking,Dev,C,Decommission,Retired

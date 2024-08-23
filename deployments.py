@@ -1,8 +1,8 @@
 import pandas as pd
-from tabulate import tabulate
+from tabulate import tabulate  # Explicit import of tabulate
 
 # Load data from CSV
-df = pd.read_csv('deployments.csv')
+df = pd.read_csv('sample_data.csv')
 
 # Strip any whitespace from column names
 df.columns = df.columns.str.strip()
@@ -18,11 +18,8 @@ column_config = {
     'deployments': 'Deployments'
 }
 
-# 1. Calculate the total number of unique applications and sum of deployments per LOB
-total_apps_per_lob = df.groupby(column_config['lob']).agg(
-    Total_Apps=(column_config['app_name'], 'nunique'),
-    Total_Deployments=(column_config['deployments'], 'sum')
-).reset_index()
+# 1. Calculate the total number of unique applications per LOB
+total_apps_per_lob = df.groupby(column_config['lob'])[column_config['app_name']].nunique().reset_index(name='Total Apps')
 
 # 2. Calculate the number of applications in Prod, UAT, and Dev environments per LOB
 env_counts = df.groupby([column_config['lob'], column_config['environment']])[column_config['app_name']].nunique().unstack(fill_value=0).reset_index()
@@ -52,4 +49,4 @@ result = result.rename(columns={
 with open('result_summary.md', 'w') as f:
     f.write(tabulate(result, headers='keys', tablefmt='pipe', showindex=False))
 
-print("Results written to 'deployments.md'")
+print("Results written to 'result_summary.md'")

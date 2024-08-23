@@ -45,7 +45,10 @@ result = result.rename(columns={
     column_config['offering_status']: 'OfferingStatus'
 })
 
-# 5. Write the result to a Markdown file
+# 5. Reorder the columns to make 'Deployments' the second column
+result = result[['LOB', 'Deployments', 'Total Apps', 'Prod Apps', 'UAT Apps', 'Dev Apps', 'Most Critical Prod App', 'Strategy', 'Criticality', 'OfferingStatus']]
+
+# 6. Write the result to a Markdown file
 with open('result_summary.md', 'w') as f:
     f.write(tabulate(result, headers='keys', tablefmt='pipe', showindex=False))
 

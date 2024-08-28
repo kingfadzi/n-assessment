@@ -1,8 +1,7 @@
 import lxml.etree as ET
 from collections import defaultdict
 
-# Load and parse the XML file
-file_path = 'nes_summary.xml'  # Replace with your actual XML file path
+file_path = 'nes_summary.xml'
 tree = ET.parse(file_path)
 
 def count_nes_by_region_and_city_with_xpath(tree):

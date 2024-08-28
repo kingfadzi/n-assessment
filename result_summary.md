@@ -1,0 +1,5 @@
+| LOB               |   Deployments |   Total Apps |   Prod Apps |   UAT Apps |   Dev Apps | Most Critical Prod App   | Strategy     | Criticality   | OfferingStatus   |
+|:------------------|--------------:|-------------:|------------:|-----------:|-----------:|:-------------------------|:-------------|:--------------|:-----------------|
+| Corporate Banking |         10000 |            1 |           1 |          1 |          1 | IB.RNA-BAZ               | Decommission | C             | Retired          |
+| Markets Pre Trade |        100000 |            1 |           1 |          1 |          1 | IB.RNA-FOO               | Maintain     | B             | Operational      |
+| Wealth Post Trade |         50000 |            1 |           1 |          1 |          1 | IB.RNA-BAR               | Improve      | A             | Maintenance      |

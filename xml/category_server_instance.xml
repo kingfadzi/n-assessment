@@ -1,46 +1,48 @@
 <RESULT>
     <Entry>
-        <MgmntGroup name="GTIS">
-            <Business name="cloud">
-                <Area name="virtualization and cloud">
-                    <Application name="cloud management"/>
-                    <Application name="virtual machine provisioning"/>
-                    <Application name="cloud monitoring"/>
-                </Area>
-                <Area name="containerization">
-                    <Application name="container orchestration"/>
-                    <Application name="container registry"/>
-                    <Application name="container security"/>
-                </Area>
-                <Area name="serverless">
-                    <Application name="function as a service"/>
-                    <Application name="event-driven architecture"/>
-                    <Application name="serverless monitoring"/>
-                </Area>
-            </Business>
-            <Business name="networking">
-                <Area name="network infrastructure">
-                    <Application name="network management"/>
-                    <Application name="firewall management"/>
-                    <Application name="load balancing"/>
-                </Area>
-            </Business>
-            <Business name="security">
-                <Area name="cybersecurity">
-                    <Application name="threat detection"/>
-                    <Application name="identity management"/>
-                    <Application name="incident response"/>
-                </Area>
-            </Business>
-        </MgmntGroup>
-        <MgmntGroup name="Enterprise Services">
-            <Business name="data management">
-                <Area name="big data">
-                    <Application name="data lake"/>
-                    <Application name="data analytics"/>
-                    <Application name="data governance"/>
-                </Area>
-            </Business>
-        </MgmntGroup>
+        <RESULT>
+            <MgmntGroup name="GTIS">
+                <Business name="cloud">
+                    <Area name="virtualization and cloud">
+                        <Application name="cloud management"/>
+                        <Application name="virtual machine provisioning"/>
+                        <Application name="cloud monitoring"/>
+                    </Area>
+                    <Area name="containerization">
+                        <Application name="container orchestration"/>
+                        <Application name="container registry"/>
+                        <Application name="container security"/>
+                    </Area>
+                    <Area name="serverless">
+                        <Application name="function as a service"/>
+                        <Application name="event-driven architecture"/>
+                        <Application name="serverless monitoring"/>
+                    </Area>
+                </Business>
+                <Business name="networking">
+                    <Area name="network infrastructure">
+                        <Application name="network management"/>
+                        <Application name="firewall management"/>
+                        <Application name="load balancing"/>
+                    </Area>
+                </Business>
+                <Business name="security">
+                    <Area name="cybersecurity">
+                        <Application name="threat detection"/>
+                        <Application name="identity management"/>
+                        <Application name="incident response"/>
+                    </Area>
+                </Business>
+            </MgmntGroup>
+            <MgmntGroup name="Enterprise Services">
+                <Business name="data management">
+                    <Area name="big data">
+                        <Application name="data lake"/>
+                        <Application name="data analytics"/>
+                        <Application name="data governance"/>
+                    </Area>
+                </Business>
+            </MgmntGroup>
+        </RESULT>
     </Entry>
 </RESULT>

@@ -63,24 +63,40 @@
                                 position: 'left',
                                 verticalAlign: 'middle',
                                 align: 'right',
-                                fontSize: 14
+                                fontSize: 14,
+                                distance: 10, // Add some space between labels and nodes
                             },
                             leaves: {
                                 label: {
                                     position: 'right',
                                     verticalAlign: 'middle',
-                                    align: 'left'
+                                    align: 'left',
+                                    distance: 10, // Add some space between labels and nodes
                                 }
                             },
                             expandAndCollapse: true,
-                            initialTreeDepth: 3,
+                            initialTreeDepth: 2,  // Adjust this value to your preference
                             animationDuration: 550,
                             animationDurationUpdate: 750,
                             roam: true,  // Enable panning and zooming
-                            layout: 'orthogonal'  // Layout for better scrolling experience
+                            layout: 'orthogonal',  // Layout for better scrolling experience
+                            lineStyle: {
+                                width: 2,
+                                curveness: 0.5,  // Adds curve to the lines for better spacing
+                            },
+                            itemStyle: {
+                                borderColor: '#ccc',  // Makes the connecting lines more visible
+                                borderWidth: 2,
+                            },
+                            edgeShape: 'polyline',  // This ensures better spacing and visibility
                         }
                     ]
                 };
+
+// Adjust the container height dynamically based on the content
+                chart.setOption(option);
+                chart.resize();
+
 
                 chart.setOption(option);
 

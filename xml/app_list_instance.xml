@@ -1,0 +1,23 @@
+<RESULT>
+    <Entry id="entry1">
+        <RESULT>
+            <application name="ssss1" sn_id="APP123"/>
+            <application name="ssss2" sn_id="APP124"/>
+            <application name="ssss3" sn_id="APP125"/>
+        </RESULT>
+    </Entry>
+    <Entry id="entry2">
+        <RESULT>
+            <application name="ssss4" sn_id="APP126"/>
+            <application name="ssss5" sn_id="APP127"/>
+        </RESULT>
+    </Entry>
+    <Entry id="entry3">
+        <RESULT>
+            <application name="ssss6" sn_id="APP128"/>
+            <application name="ssss7" sn_id="APP129"/>
+            <application name="ssss8" sn_id="APP130"/>
+            <application name="ssss9" sn_id="APP131"/>
+        </RESULT>
+    </Entry>
+</RESULT>

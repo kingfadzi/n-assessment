@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html style="height: 100%">
+<html style="height: 100%;">
 <head>
     <meta charset="utf-8">
     <title>ECharts Process Tree Example</title>
@@ -9,15 +9,15 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            min-height: 100%;
+            height: 100%;
             overflow-x: hidden; /* Prevent horizontal scrolling */
             overflow-y: auto; /* Allow vertical scrolling if content overflows */
         }
 
         #main {
             width: 100%;
-            min-height: 600px; /* Set a minimum height */
-            height: auto; /* Allow the height to expand automatically based on content */
+            height: auto; /* Allow the height to adjust automatically based on content */
+            min-height: 100vh; /* Ensure at least the full viewport height */
             border: 1px solid #ccc; /* Optional: add a border for better visibility */
             box-sizing: border-box; /* Ensure padding and border are included in the height */
         }
@@ -52,9 +52,9 @@
                             type: 'tree',
                             data: data,  // Use the data fetched from the JSON file
                             top: '1%',
-                            left: '7%',
+                            left: '2%',
                             bottom: '1%',
-                            right: '20%',
+                            right: '2%',
                             symbolSize: 15, // Increase symbol size for better visibility
                             label: {
                                 position: 'left',
@@ -79,15 +79,15 @@
                             layout: 'orthogonal',  // Layout for better scrolling experience
                             lineStyle: {
                                 width: 2,
-                                curveness: 0.5,  // Adds curve to the lines for better spacing
+                                curveness: 0,  // Keep lines straight for orthogonal layout
                             },
                             itemStyle: {
                                 borderColor: '#ccc',  // Makes the connecting lines more visible
                                 borderWidth: 2,
                             },
                             nodePadding: 20,  // Adds padding between nodes (horizontal spacing)
-                            layerPadding: 120, // Increase spacing between layers (vertical spacing)
-                            edgeShape: 'polyline',  // This ensures better spacing and visibility
+                            layerPadding: 200, // Significantly increase spacing between layers (vertical spacing)
+                            edgeShape: 'polyline',  // Ensure clear and consistent connections
                         }
                     ]
                 };

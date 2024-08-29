@@ -1,0 +1,41 @@
+{
+  "list": [
+    {
+      "type": "root",
+      "name": "Root Node",
+      "description": "The root of the tree",
+      "id": "1",
+      "nodes": [
+        {
+          "type": "branch",
+          "name": "Branch Node 1",
+          "description": "A branch node",
+          "id": "2",
+          "nodes": [
+            {
+              "type": "leaf",
+              "name": "Leaf Node 1-1",
+              "description": "A leaf node",
+              "id": "3",
+              "nodes": []
+            },
+            {
+              "type": "leaf",
+              "name": "Leaf Node 1-2",
+              "description": "Another leaf node",
+              "id": "4",
+              "nodes": []
+            }
+          ]
+        },
+        {
+          "type": "branch",
+          "name": "Branch Node 2",
+          "description": "Another branch node",
+          "id": "5",
+          "nodes": []
+        }
+      ]
+    }
+  ]
+}

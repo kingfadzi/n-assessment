@@ -1,21 +1,22 @@
 <!DOCTYPE html>
-<html style="height: 100%; margin: 0">
+<html>
 <head>
     <meta charset="utf-8">
     <title>ECharts Process Tree Example</title>
     <script src="js/echarts.min.js"></script> <!-- Path to your local echarts.min.js -->
     <style>
-        /* Use the full height of the page */
-        html, body, #main {
-            height: 100%;
+        /* Remove any height restrictions */
+        html, body {
             margin: 0;
             padding: 0;
+            width: 100%;
+            /* Allow body to grow with content */
+            overflow-x: hidden; /* Prevent horizontal scrolling */
         }
 
-        /* Allow the container to scroll if content overflows */
         #main {
-            overflow: auto; /* Enable scrolling */
-            border: 1px solid #ccc; /* Optional: add a border for better visibility */
+            width: 100%;
+            border: 1px solid #ccc; /* Optional: border for visibility */
         }
     </style>
 </head>
@@ -70,6 +71,9 @@
             };
 
             chart.setOption(option);
+
+            // Adjust the container height dynamically based on the content
+            chart.resize();
         })
         .catch(error => {
             console.error('Error loading the JSON data:', error);

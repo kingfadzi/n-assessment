@@ -3,17 +3,27 @@
 <head>
     <meta charset="utf-8">
     <title>ECharts Process Tree Example</title>
-    <script src="js/echarts.min.js"></script>
+    <script src="js/echarts.min.js"></script> <!-- Path to your local echarts.min.js -->
+    <style>
+        /* Set the size of the container and enable scrolling */
+        #main {
+            width: 100%;
+            height: 600px; /* Set a fixed height */
+            overflow: auto; /* Enable scrolling */
+            border: 1px solid #ccc; /* Optional: add a border for better visibility */
+        }
+    </style>
 </head>
 <body style="height: 100%; margin: 0">
-<div id="main" style="height: 100%"></div>
+<div id="main"></div>
 <script type="text/javascript">
-
-    fetch('data/data.json')
+    // Fetch the JSON data from the local file system
+    fetch('data/data.json') // Path to your local JSON file
         .then(response => response.json())
         .then(data => {
             var chart = echarts.init(document.getElementById('main'));
 
+            // Define the chart options
             var option = {
                 tooltip: {
                     trigger: 'item',
@@ -25,7 +35,7 @@
                 series: [
                     {
                         type: 'tree',
-                        data: data,
+                        data: data,  // Use the data fetched from the JSON file
                         top: '1%',
                         left: '7%',
                         bottom: '1%',
@@ -47,7 +57,9 @@
                         expandAndCollapse: true,
                         initialTreeDepth: 3,
                         animationDuration: 550,
-                        animationDurationUpdate: 750
+                        animationDurationUpdate: 750,
+                        roam: true,  // Enable panning and zooming
+                        layout: 'orthogonal'  // Layout for better scrolling experience
                     }
                 ]
             };

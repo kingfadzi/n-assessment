@@ -1,83 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html style="height: 100%">
 <head>
     <meta charset="utf-8">
     <title>ECharts Process Tree Example</title>
-    <script src="js/echarts.min.js"></script> <!-- Path to your local echarts.min.js -->
+    <script src="js/echarts.min.js"></script> <!-- Ensure this path is correct -->
     <style>
-        /* Remove any height restrictions */
-        html, body {
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
-            /* Allow body to grow with content */
+            min-height: 100%;
             overflow-x: hidden; /* Prevent horizontal scrolling */
+            overflow-y: auto; /* Allow vertical scrolling if content overflows */
         }
 
         #main {
             width: 100%;
-            border: 1px solid #ccc; /* Optional: border for visibility */
+            min-height: 600px; /* Set a minimum height */
+            height: auto; /* Allow the height to expand automatically based on content */
+            border: 1px solid #ccc; /* Optional: add a border for better visibility */
+            box-sizing: border-box; /* Ensure padding and border are included in the height */
         }
     </style>
 </head>
 <body>
 <div id="main"></div>
 <script type="text/javascript">
-    // Fetch the JSON data from the local file system
-    fetch('data/data.json') // Path to your local JSON file
-        .then(response => response.json())
-        .then(data => {
-            var chart = echarts.init(document.getElementById('main'));
+    // Ensure the script waits until the document is fully loaded
+    document.addEventListener('DOMContentLoaded', function () {
+        // Fetch the JSON data from the local file system
+        fetch('data/data.json') // Path to your local JSON file
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Data loaded successfully:", data);
 
-            // Define the chart options
-            var option = {
-                tooltip: {
-                    trigger: 'item',
-                    triggerOn: 'mousemove',
-                    formatter: function(params) {
-                        return `${params.data.name}<br/>Type: ${params.data.type}<br/>Description: ${params.data.description}`;
-                    }
-                },
-                series: [
-                    {
-                        type: 'tree',
-                        data: data,  // Use the data fetched from the JSON file
-                        top: '1%',
-                        left: '7%',
-                        bottom: '1%',
-                        right: '20%',
-                        symbolSize: 10,
-                        label: {
-                            position: 'left',
-                            verticalAlign: 'middle',
-                            align: 'right',
-                            fontSize: 14
-                        },
-                        leaves: {
+                var chart = echarts.init(document.getElementById('main'));
+
+                // Define the chart options
+                var option = {
+                    tooltip: {
+                        trigger: 'item',
+                        triggerOn: 'mousemove',
+                        formatter: function(params) {
+                            return `${params.data.name}<br/>Type: ${params.data.type}<br/>Description: ${params.data.description}`;
+                        }
+                    },
+                    series: [
+                        {
+                            type: 'tree',
+                            data: data,  // Use the data fetched from the JSON file
+                            top: '1%',
+                            left: '7%',
+                            bottom: '1%',
+                            right: '20%',
+                            symbolSize: 10,
                             label: {
-                                position: 'right',
+                                position: 'left',
                                 verticalAlign: 'middle',
-                                align: 'left'
-                            }
-                        },
-                        expandAndCollapse: true,
-                        initialTreeDepth: 3,
-                        animationDuration: 550,
-                        animationDurationUpdate: 750,
-                        roam: true,  // Enable panning and zooming
-                        layout: 'orthogonal'  // Layout for better scrolling experience
-                    }
-                ]
-            };
+                                align: 'right',
+                                fontSize: 14
+                            },
+                            leaves: {
+                                label: {
+                                    position: 'right',
+                                    verticalAlign: 'middle',
+                                    align: 'left'
+                                }
+                            },
+                            expandAndCollapse: true,
+                            initialTreeDepth: 3,
+                            animationDuration: 550,
+                            animationDurationUpdate: 750,
+                            roam: true,  // Enable panning and zooming
+                            layout: 'orthogonal'  // Layout for better scrolling experience
+                        }
+                    ]
+                };
 
-            chart.setOption(option);
+                chart.setOption(option);
 
-            // Adjust the container height dynamically based on the content
-            chart.resize();
-        })
-        .catch(error => {
-            console.error('Error loading the JSON data:', error);
-        });
+                // Adjust the container height dynamically based on the content
+                chart.resize();
+            })
+            .catch(error => {
+                console.error('Error loading the JSON data:', error);
+            });
+    });
 </script>
 </body>
 </html>

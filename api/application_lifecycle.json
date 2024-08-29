@@ -1,0 +1,183 @@
+{
+  "info": {
+    "name": "Nolio Application Lifecycle",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+  },
+  "item": [
+    {
+      "name": "Get Application Details",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/applications/{{appId}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "applications",
+            "{{appId}}"
+          ]
+        },
+        "description": "Retrieve details about the specific application."
+      }
+    },
+    {
+      "name": "List Environments Associated with Application",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/applications/{{appId}}/environments",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "applications",
+            "{{appId}}",
+            "environments"
+          ]
+        },
+        "description": "Retrieve a list of environments where the application is deployed."
+      }
+    },
+    {
+      "name": "Get Deployment Plans for Application",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/applications/{{appId}}/projects/{{projectId}}/deployment-plans",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "applications",
+            "{{appId}}",
+            "projects",
+            "{{projectId}}",
+            "deployment-plans"
+          ]
+        },
+        "description": "List all deployment plans associated with the application."
+      }
+    },
+    {
+      "name": "Get Details of Specific Deployment Plan",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/applications/{{appId}}/projects/{{projectId}}/deployment-plans/{{deploymentPlanId}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "applications",
+            "{{appId}}",
+            "projects",
+            "{{projectId}}",
+            "deployment-plans",
+            "{{deploymentPlanId}}"
+          ]
+        },
+        "description": "Retrieve details about a specific deployment plan."
+      }
+    },
+    {
+      "name": "Get Releases for an Environment",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/applications/{{appId}}/environments/{{envId}}/releases",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "applications",
+            "{{appId}}",
+            "environments",
+            "{{envId}}",
+            "releases"
+          ]
+        },
+        "description": "Retrieve a list of releases associated with a specific environment."
+      }
+    },
+    {
+      "name": "Get Status of Specific Release",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/release-status/{{releaseId}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "release-status",
+            "{{releaseId}}"
+          ]
+        },
+        "description": "Retrieve the current status of a specific release."
+      }
+    },
+    {
+      "name": "Get Deployment Logs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/deployment/{{deploymentId}}/logs",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "deployment",
+            "{{deploymentId}}",
+            "logs"
+          ]
+        },
+        "description": "Retrieve logs associated with a specific deployment."
+      }
+    },
+    {
+      "name": "Get Current State of the Deployment",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/deployment-state/{{deploymentId}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "deployment-state",
+            "{{deploymentId}}"
+          ]
+        },
+        "description": "Retrieve the overall state of the deployment."
+      }
+    },
+    {
+      "name": "Get Approval Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/deployments/{{deploymentId}}/update-approval",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "deployments",
+            "{{deploymentId}}",
+            "update-approval"
+          ]
+        },
+        "description": "Check the approval status for the deployment."
+      }
+    }
+  ]
+}

@@ -5,7 +5,6 @@ file_path = 'category_server_instance.xml'
 tree = ET.parse(file_path)
 output_markdown_file = 'mgmnt_group_app_counts.md'  # The output Markdown file
 
-
 def count_apps_by_mgmnt_group(tree):
     data = []
 
@@ -14,7 +13,7 @@ def count_apps_by_mgmnt_group(tree):
     for mgmnt_group in mgmnt_groups:
         group_name = mgmnt_group.get('name')
         app_count = len(mgmnt_group.xpath('.//Business/Area/Application[not(AppId[starts-with(@name, "prod")])]'))
-        data.append({'MgmntGroup': group_name, 'ApplicationCount': app_count})
+        data.append({'Mgmnt Group': group_name, 'ApplicationCount': app_count})
 
     return data
 

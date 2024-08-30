@@ -26,7 +26,7 @@
 <div id="main"></div>
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
-        fetch('data/data.json') // Path to your local JSON file
+        fetch('data/large_tree_dataset.json') // Path to your local JSON file
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -50,28 +50,28 @@
                         {
                             type: 'tree',
                             data: data,  // Use the data fetched from the JSON file
-                            top: '5%',
-                            left: '5%',
-                            bottom: '5%',
-                            right: '5%',
+                            top: '10%',  // Adjusted to reduce line length
+                            left: '10%', // Adjusted to reduce line length
+                            bottom: '10%', // Adjusted to reduce line length
+                            right: '10%', // Adjusted to reduce line length
                             symbolSize: 15, // Increase symbol size for better visibility
                             label: {
                                 position: 'left',
                                 verticalAlign: 'middle',
                                 align: 'right',
                                 fontSize: 14,
-                                distance: 20, // Add more space between labels and nodes
+                                distance: 10, // Reduced distance to shorten lines
                             },
                             leaves: {
                                 label: {
                                     position: 'right',
                                     verticalAlign: 'middle',
                                     align: 'left',
-                                    distance: 20, // Add more space between labels and nodes
+                                    distance: 10, // Reduced distance to shorten lines
                                 }
                             },
-                            expandAndCollapse: true,
-                            initialTreeDepth: 2,  // Adjust this value to your preference
+                            expandAndCollapse: true, // Enable standard expand and collapse behavior
+                            initialTreeDepth: 1,  // Start with nodes expanded up to level 1
                             animationDuration: 550,
                             animationDurationUpdate: 750,
                             roam: true,  // Enable panning and zooming
@@ -85,7 +85,7 @@
                                 borderWidth: 2,
                             },
                             nodePadding: 20,  // Adds padding between nodes (horizontal spacing)
-                            layerPadding: 300, // Significantly increase spacing between layers (vertical spacing)
+                            layerPadding: 150, // Reduce vertical spacing to shorten lines
                             edgeShape: 'polyline',  // Ensure clear and consistent connections
                         }
                     ]

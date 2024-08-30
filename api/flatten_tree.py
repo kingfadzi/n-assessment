@@ -3,7 +3,7 @@ import pandas as pd
 
 # Configuration
 json_filename = 'data/large_tree_dataset.json'  # Input JSON file
-output_csv_filename = 'tree_structure_with_named_columns.csv'  # Output CSV file
+output_csv_filename = 'tree_structure_with_extra_columns.csv'  # Output CSV file
 
 def flatten_tree(node, architecture, level=0, path=None):
     """Recursively flatten the tree structure into rows."""
@@ -45,12 +45,18 @@ def tree_to_spreadsheet(data):
         print("Error: No rows generated, possibly due to unexpected data structure.")
         return pd.DataFrame()  # Return an empty DataFrame to avoid further errors
 
-    # Define the column names according to the Nolio deployment structure
-    columns = ['Architecture', 'Phase', 'Environment', 'Resource', 'Action/Process']
+    # Define base column names according to the Nolio deployment structure
+    base_columns = ['Architecture', 'Phase', 'Environment', 'Resource', 'Action/Process']
 
-    # Adjust the number of columns based on the maximum path length
+    # Determine the maximum number of levels in the data
     max_levels = max(len(row) for row in rows)
-    columns = columns[:max_levels]  # Trim columns to match the path length
+
+    # Generate extra column names if needed
+    if max_levels > len(base_columns):
+        extra_columns = [f'Extra Level {i}' for i in range(1, max_levels - len(base_columns) + 1)]
+        columns = base_columns + extra_columns
+    else:
+        columns = base_columns[:max_levels]
 
     # Convert the list of rows into a DataFrame
     df = pd.DataFrame(rows, columns=columns)

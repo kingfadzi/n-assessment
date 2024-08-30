@@ -2,14 +2,11 @@ import json
 import pandas as pd
 
 # Configuration
-json_filename = 'data/large_tree_dataset.json'  # Input JSON file
-output_csv_filename = 'tree_structure_with_extra_columns.csv'  # Output CSV file
+json_filename = 'processes_tree.json'  # Input JSON file
+output_csv_filename = 'tree_structure_no_duplication.csv'  # Output CSV file
 
-def flatten_tree(node, architecture, level=0, path=None):
+def flatten_tree(node, path):
     """Recursively flatten the tree structure into rows."""
-    if path is None:
-        path = [architecture]  # Start path with architecture
-
     # Ensure node is a dictionary
     if isinstance(node, dict):
         if 'name' in node:
@@ -21,7 +18,7 @@ def flatten_tree(node, architecture, level=0, path=None):
             if 'nodes' in node and isinstance(node['nodes'], list) and node['nodes']:
                 rows = []
                 for child in node['nodes']:
-                    rows.extend(flatten_tree(child, architecture, level + 1, new_path))
+                    rows.extend(flatten_tree(child, new_path))
                 return rows
             else:
                 # If the node is a leaf, return the path as a row
@@ -39,7 +36,7 @@ def tree_to_spreadsheet(data):
     for node in data:
         architecture = node['name']  # Assume 'name' at the root level corresponds to 'Architecture'
         print(f"Root Node: {node['name']}")
-        rows.extend(flatten_tree(node, architecture))
+        rows.extend(flatten_tree(node, [architecture]))  # Start path with architecture
 
     if not rows:
         print("Error: No rows generated, possibly due to unexpected data structure.")

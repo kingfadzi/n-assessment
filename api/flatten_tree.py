@@ -3,12 +3,12 @@ import pandas as pd
 
 # Configuration
 json_filename = 'data/large_tree_dataset.json'  # Input JSON file
-output_csv_filename = 'tree_structure.csv'  # Output CSV file
+output_csv_filename = 'tree_structure_with_named_columns.csv'  # Output CSV file
 
-def flatten_tree(node, level=0, path=None):
+def flatten_tree(node, architecture, level=0, path=None):
     """Recursively flatten the tree structure into rows."""
     if path is None:
-        path = []
+        path = [architecture]  # Start path with architecture
 
     # Ensure node is a dictionary
     if isinstance(node, dict):
@@ -21,7 +21,7 @@ def flatten_tree(node, level=0, path=None):
             if 'nodes' in node and isinstance(node['nodes'], list) and node['nodes']:
                 rows = []
                 for child in node['nodes']:
-                    rows.extend(flatten_tree(child, level + 1, new_path))
+                    rows.extend(flatten_tree(child, architecture, level + 1, new_path))
                 return rows
             else:
                 # If the node is a leaf, return the path as a row
@@ -37,18 +37,23 @@ def tree_to_spreadsheet(data):
     """Convert tree data to a spreadsheet format."""
     rows = []
     for node in data:
+        architecture = node['name']  # Assume 'name' at the root level corresponds to 'Architecture'
         print(f"Root Node: {node['name']}")
-        rows.extend(flatten_tree(node))
+        rows.extend(flatten_tree(node, architecture))
 
     if not rows:
         print("Error: No rows generated, possibly due to unexpected data structure.")
         return pd.DataFrame()  # Return an empty DataFrame to avoid further errors
 
-    # Determine the maximum number of levels in the data
+    # Define the column names according to the Nolio deployment structure
+    columns = ['Architecture', 'Phase', 'Environment', 'Resource', 'Action/Process']
+
+    # Adjust the number of columns based on the maximum path length
     max_levels = max(len(row) for row in rows)
+    columns = columns[:max_levels]  # Trim columns to match the path length
 
     # Convert the list of rows into a DataFrame
-    df = pd.DataFrame(rows, columns=[f'Level {i+1}' for i in range(max_levels)])
+    df = pd.DataFrame(rows, columns=columns)
 
     return df
 

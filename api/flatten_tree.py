@@ -2,8 +2,8 @@ import json
 import pandas as pd
 
 # Configuration
-json_filename = 'large_tree_dataset.json'  # Input JSON file
-output_csv_filename = 'tree_structure_no_duplication.csv'  # Output CSV file
+json_filename = 'data/large_tree_dataset.json'  # Input JSON file
+output_csv_filename = 'tree_structure_named_columns.csv'  # Output CSV file
 
 def flatten_tree(node, path=None):
     """Recursively flatten the tree structure into rows."""
@@ -37,17 +37,17 @@ def tree_to_spreadsheet(data):
     """Convert tree data to a spreadsheet format."""
     rows = []
     for node in data:
-        architecture = node['name']  # Assume 'name' at the root level corresponds to 'Architecture'
-        print(f"Root Node: {architecture}")
-        # Process the tree starting with the architecture name as the first element in the path
-        rows.extend(flatten_tree(node, [architecture]))
+        root = node['name']  # Assume 'name' at the root level corresponds to 'Root'
+        print(f"Root Node: {root}")
+        # Process the tree starting with the root name as the first element in the path
+        rows.extend(flatten_tree(node, [root]))
 
     if not rows:
         print("Error: No rows generated, possibly due to unexpected data structure.")
         return pd.DataFrame()  # Return an empty DataFrame to avoid further errors
 
     # Define base column names according to the Nolio deployment structure
-    base_columns = ['Architecture', 'Phase', 'Environment', 'Resource', 'Action/Process']
+    base_columns = ['Root', 'Architecture', 'Environment', 'Resource', 'Action/Process']
 
     # Determine the maximum number of levels in the data
     max_levels = max(len(row) for row in rows)

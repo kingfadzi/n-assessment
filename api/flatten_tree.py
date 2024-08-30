@@ -2,8 +2,8 @@ import json
 import pandas as pd
 
 # Configuration
-json_filename = 'data/large_tree_dataset.json'  # Input JSON file
-output_csv_filename = 'tree_structure_named_columns.csv'  # Output CSV file
+json_filename = 'large_tree_dataset.json'  # Input JSON file
+output_csv_filename = 'tree_structure_with_phase.csv'  # Output CSV file
 
 def flatten_tree(node, path=None):
     """Recursively flatten the tree structure into rows."""
@@ -47,7 +47,7 @@ def tree_to_spreadsheet(data):
         return pd.DataFrame()  # Return an empty DataFrame to avoid further errors
 
     # Define base column names according to the Nolio deployment structure
-    base_columns = ['Root', 'Architecture', 'Environment', 'Resource', 'Action/Process']
+    base_columns = ['Root', 'Architecture', 'Phase', 'Environment', 'Resource', 'Action/Process']
 
     # Determine the maximum number of levels in the data
     max_levels = max(len(row) for row in rows)

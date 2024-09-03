@@ -60,5 +60,10 @@ df.columns = custom_column_names[:max_depth]
 output_file_path = 'output_hierarchy_custom_columns.csv'  # Replace with desired output path
 df.to_csv(output_file_path, index=False)
 
+output_md_path = 'output_hierarchy_custom_columns.md'  # Replace with desired output path
+with open(output_md_path, 'w') as f:
+    f.write(df.to_markdown(index=False))
+
+
 # Display the DataFrame
 df

@@ -56,14 +56,21 @@ if len(custom_column_names) < max_depth:
 # Rename the columns using the custom names
 df.columns = custom_column_names[:max_depth]
 
-# Save the DataFrame to a CSV file
-output_file_path = 'output_hierarchy_custom_columns.csv'  # Replace with desired output path
-df.to_csv(output_file_path, index=False)
+# Skip the first column 'Root'
+df_reduced = df.iloc[:, 1:]  # Exclude the first column
 
+# Update column names to skip 'Root'
+reduced_column_names = custom_column_names[1:max_depth]  # Exclude the first column name
+df_reduced.columns = reduced_column_names
+
+# Save the reduced DataFrame to a CSV file
+output_csv_path = 'output_hierarchy_custom_columns.csv'  # Replace with desired output path
+df_reduced.to_csv(output_csv_path, index=False)
+
+# Save the reduced DataFrame to a Markdown file
 output_md_path = 'output_hierarchy_custom_columns.md'  # Replace with desired output path
 with open(output_md_path, 'w') as f:
-    f.write(df.to_markdown(index=False))
+    f.write(df_reduced.to_markdown(index=False))
 
-
-# Display the DataFrame
-df
+# Display the reduced DataFrame
+df_reduced

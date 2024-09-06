@@ -1,15 +1,16 @@
 import json
 import pandas as pd
 
-json_file_path = 'data.json'
+
+json_file_path = 'data.json'  # Replace with your JSON file path
 
 with open(json_file_path, 'r') as f:
     data = json.load(f)
 
-if isinstance(data, list):
-    names = [item['name'] for item in data if 'name' in item]
+if 'list' in data:
+    names = [item['name'] for item in data['list'] if 'name' in item]
 else:
-    raise ValueError("The JSON format is not a list of dictionaries.")
+    raise ValueError("The JSON structure doesn't contain a 'list' field.")
 
 df = pd.DataFrame(names, columns=['name'])
 

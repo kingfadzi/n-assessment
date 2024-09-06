@@ -14,15 +14,31 @@ api_base_url = 'https://api.example.com/group/{group_name}/applications'
 
 # Function to clean and extract XML content by removing unwanted characters
 def clean_xml_response(response_text):
-    # Remove any leading non-XML characters (like junk data or byte-order marks)
     cleaned_xml = re.sub(r'[^\x00-\x7F]+', '', response_text)  # Remove non-ASCII characters
     cleaned_xml = cleaned_xml.strip()  # Remove leading and trailing whitespace/newlines
     return cleaned_xml
 
+# Function to extract application names from the XML
 def extract_app_names(xml_content):
     try:
         root = ET.fromstring(xml_content)
-        return [app.get('name') for app in root.findall('.//application') if app.get('name')]
+
+        # Debug: Print the root XML element to inspect the structure
+        logging.debug(f"Root element: {ET.tostring(root, encoding='unicode')}")
+
+        # Find all <application> elements in the entire XML document
+        applications = root.findall(".//application")
+
+        # Debug: Print all application elements found
+        logging.debug(f"Found application elements: {applications}")
+
+        # Extract the 'name' attribute from each <application> element
+        app_names = [app.get('name') for app in applications if app.get('name')]
+
+        # Debug: Print the application names found
+        logging.debug(f"Extracted application names: {app_names}")
+
+        return app_names
     except ET.ParseError as e:
         logging.error(f"Failed to parse XML: {e}")
         return []

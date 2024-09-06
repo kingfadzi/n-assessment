@@ -48,7 +48,6 @@ print(crosstab)
 # Writing results to a Markdown file
 markdown_file = 'analysis_results.md'
 open(markdown_file, 'w').close()  # Clear previous contents
-save_to_markdown(df.head(), markdown_file, "First few rows of the dataset")
 save_to_markdown(categorical_summary, markdown_file, "Summary statistics for categorical columns")
 save_to_markdown(os_distribution, markdown_file, "Operating System Distribution")
 save_to_markdown(reachability_distribution, markdown_file, "Reachability Distribution")

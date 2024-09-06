@@ -5,7 +5,6 @@ import xml.etree.ElementTree as ET
 input_csv_file = 'names.csv'
 output_csv_file = 'group_apps.csv'
 cacert_path = '/path/to/cacert.pem'
-auth = ('your_username', 'your_password')
 api_base_url = 'https://api.example.com/group/{group_name}/applications'
 
 def extract_app_names(xml_content):
@@ -18,7 +17,7 @@ results = []
 
 for group_name in group_df['name']:
     url = api_base_url.format(group_name=group_name)
-    response = requests.get(url, auth=auth, verify=cacert_path)
+    response = requests.get(url, verify=cacert_path)
 
     if response.status_code == 200:
         app_names = extract_app_names(response.text)

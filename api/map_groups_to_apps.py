@@ -3,9 +3,8 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 import logging
 
-# Set up logging
-logging.basicConfig(filename='app_debug.log', level=logging.DEBUG,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+# Set up console logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 input_csv_file = 'names.csv'
 output_csv_file = 'group_apps.csv'
@@ -30,6 +29,9 @@ for group_name in group_df['name']:
     try:
         logging.info(f"Making API request for group: {group_name}")
         response = requests.get(url, verify=cacert_path)
+
+        # Print the full response for debugging
+        print(f"Response for group {group_name}:\n{response.text}\n")
 
         if response.status_code == 200:
             app_names = extract_app_names(response.text)

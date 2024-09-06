@@ -25,20 +25,10 @@ reachability_distribution = df['reachable'].value_counts()
 print("\nReachability Distribution:")
 print(reachability_distribution)
 
-# Server state distribution
-state_distribution = df['state'].value_counts()
-print("\nServer State Distribution:")
-print(state_distribution)
-
-# Server group distribution
-group_distribution = df['serverGroups'].value_counts()
-print("\nServer Group Distribution:")
-print(group_distribution)
-
-# Frequency of combinations of 'osType' and 'state'
-os_state_combination = df.groupby(['osType', 'state']).size().reset_index(name='count')
-print("\nFrequency of OS type and state combinations:")
-print(os_state_combination)
+# Server group distribution with osType and reachability
+group_os_reach_distribution = df.groupby(['serverGroups', 'osType', 'reachable']).size().reset_index(name='count')
+print("\nServer Group Distribution with OS Type and Reachability:")
+print(group_os_reach_distribution)
 
 # Cross-tabulation of 'osType' and 'reachable'
 crosstab = pd.crosstab(df['osType'], df['reachable'])
@@ -51,7 +41,5 @@ open(markdown_file, 'w').close()  # Clear previous contents
 save_to_markdown(categorical_summary, markdown_file, "Summary statistics for categorical columns")
 save_to_markdown(os_distribution, markdown_file, "Operating System Distribution")
 save_to_markdown(reachability_distribution, markdown_file, "Reachability Distribution")
-save_to_markdown(state_distribution, markdown_file, "Server State Distribution")
-save_to_markdown(group_distribution, markdown_file, "Server Group Distribution")
-save_to_markdown(os_state_combination, markdown_file, "Frequency of OS type and state combinations")
+save_to_markdown(group_os_reach_distribution, markdown_file, "Server Group Distribution with OS Type and Reachability")
 save_to_markdown(crosstab, markdown_file, "Cross-tabulation of OS type and reachability")

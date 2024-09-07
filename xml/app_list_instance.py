@@ -1,31 +1,36 @@
-import lxml.etree as ET
+import xml.etree.ElementTree as ET
 import pandas as pd
 
-file_path = 'app_list_instance.xml'
-tree = ET.parse(file_path)
+# Parse the XML file
+tree = ET.parse('app_list_instance.xml')  # Replace 'input.xml' with your actual XML file
+root = tree.getroot()
 
-def extract_applications(tree):
-    applications = tree.xpath('//Entry/RESULT/application')
+# Initialize a list to store the flattened data
+flattened_data = []
 
-    results = [
-        {
-            'Row Number': idx + 1,
-            'Entry ID': app.xpath('ancestor::Entry/@id')[0],
-            'Application Name': app.get('name'),
-            'SN ID': app.get('sn_id')
-        }
-        for idx, app in enumerate(applications)
-    ]
+# Loop through each Entry
+for entry in root.findall('.//Entry'):
+    entry_id = entry.get('id')
 
-    return results
+    # Loop through each application in the Entry
+    for application in entry.findall('.//application'):
+        application_name = application.get('name')
+        nolio_app_id = application.get('nolio_app_id')
+        sn_id = application.get('sn_id')
 
-app_data = extract_applications(tree)
+        # Append the flattened record to the list
+        flattened_data.append({
+            'EntryID': entry_id,
+            'ApplicationName': application_name,
+            'NolioAppID': nolio_app_id,
+            'SNID': sn_id
+        })
 
-df = pd.DataFrame(app_data)
+# Convert the flattened data into a DataFrame
+df = pd.DataFrame(flattened_data)
 
-output_markdown_file = 'applications_summary.md'
-with open(output_markdown_file, 'w') as md_file:
-    md_file.write(df.to_markdown(index=False))
+# Save to CSV
+df.to_csv('app_list_instance.csv', index=False)  # Replace 'output.csv' with your desired output file name
 
-print("\nApplication Summary by Entry:")
+# Display the DataFrame to ensure correct output
 print(df)

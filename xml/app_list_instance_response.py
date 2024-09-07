@@ -18,11 +18,11 @@ for entry in root.findall('.//Entry'):
         nolio_app_id = application.get('nolio_app_id')
         sn_ids = application.get('sn_id')
 
-        # Split the sn_id values by comma, and create a row for each one
-        for sn_id in sn_ids.split(','):
+        # Split the sn_id values by semicolon, and create a row for each one
+        for sn_id in sn_ids.split(';'):
             # Append the flattened record to the list
             flattened_data.append({
-                'EntryID': entry_id,
+                'Environment': entry_id,
                 'ApplicationName': application_name,
                 'NolioAppID': nolio_app_id,
                 'SNID': sn_id.strip()  # Ensure any leading/trailing whitespace is removed

@@ -1,21 +1,28 @@
-from sqlalchemy import create_engine
+import urllib.parse
 
-connection_string = (
-    "mssql+pyodbc:///?odbc_connect="
-    "DRIVER={ODBC Driver 17 for SQL Server};"
-    "SERVER=your_server_name_or_ip,1433;"
-    "DATABASE=your_database_name;"
-    "UID=your_username;"
-    "PWD=your_password;"
-    "Encrypt=yes;"
-    "TrustServerCertificate=yes;"
-    "Connection Timeout=30;"
-)
+def generate_superset_connection_string(driver, server, port, database, username, password, encrypt, timeout):
+    connection_string = (
+        f"DRIVER={{{driver}}};"
+        f"SERVER={server},{port};"
+        f"DATABASE={database};"
+        f"UID={username};"
+        f"PWD={password};"
+        f"Encrypt={encrypt};"
+        f"TrustServerCertificate=yes;"
+        f"Connection Timeout={timeout};"
+    )
+    encoded_connection_string = urllib.parse.quote(connection_string)
+    return f"mssql+pyodbc:///?odbc_connect={encoded_connection_string}"
 
-engine = create_engine(connection_string)
+driver = "ODBC Driver 17 for SQL Server"
+server = "your_server_name_or_ip"
+port = 1433
+database = "your_database_name"
+username = "your_username"
+password = "your_password"
+encrypt = "yes"
+timeout = 30
 
-try:
-    with engine.connect() as connection:
-        print("Connection successful!")
-except Exception as e:
-    print(f"Error: {e}")
+superset_connection_string = generate_superset_connection_string(driver, server, port, database, username, password, encrypt, timeout)
+
+print(superset_connection_string)

@@ -1,7 +1,7 @@
 import pyodbc
-import psycopg2
 import pandas as pd
 import argparse
+from sqlalchemy import create_engine
 
 PG_HOST = 'localhost'
 PG_DATABASE = 'scratchpad'
@@ -18,33 +18,19 @@ def connect_sql_server(host, port, instance, database):
     return pyodbc.connect(conn_str)
 
 def connect_postgres():
-    conn_str = f"host={PG_HOST} dbname={PG_DATABASE} user={PG_USER} password={PG_PASSWORD}"
-    return psycopg2.connect(conn_str)
+    engine_url = f"postgresql://{PG_USER}:{PG_PASSWORD}@{PG_HOST}/{PG_DATABASE}"
+    return create_engine(engine_url)
 
-def migrate_table(sql_server_conn, pg_conn, table_name):
+def migrate_table(sql_server_conn, pg_engine, table_name):
     print(f"Migrating table {table_name}...")
-
     sql_query = f"SELECT * FROM {table_name}"
     data = pd.read_sql(sql_query, sql_server_conn)
-
     data.columns = [col.replace(' ', '_').replace('(', '_').replace(')', '_').lower() for col in data.columns]
 
-    cursor = pg_conn.cursor()
-
-    drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
-    cursor.execute(drop_table_query)
-
-    create_table_query = f"""
-    CREATE TABLE {table_name} (
-        {', '.join([f'{col} TEXT' for col in data.columns])}
-    );
-    """
-    cursor.execute(create_table_query)
-
-    data.to_sql(table_name, pg_conn, if_exists='replace', index=False)
-
-    pg_conn.commit()
-    cursor.close()
+    # Using SQLAlchemy to handle the database operations
+    with pg_engine.connect() as conn:
+        conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+        data.to_sql(table_name, conn, if_exists='replace', index=False)
 
     print(f"Table {table_name} migrated successfully.")
 
@@ -65,13 +51,12 @@ def main():
         args.db
     )
 
-    pg_conn = connect_postgres()
+    pg_engine = connect_postgres()
 
     for table in args.tables:
-        migrate_table(sql_server_conn, pg_conn, table)
+        migrate_table(sql_server_conn, pg_engine, table)
 
     sql_server_conn.close()
-    pg_conn.close()
 
 if __name__ == "__main__":
     main()

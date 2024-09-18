@@ -20,7 +20,7 @@ def migrate_table(sql_server_conn, pg_engine, table_name, limit=None, sort_colum
 
     # Building the SQL query with optional sorting and limit
     sql_query = f"SELECT * FROM {table_name}"
-    if sort_column:
+    if sort_column and sort_direction:
         sql_query += f" ORDER BY {sort_column} {sort_direction}"
     if limit:
         sql_query += f" LIMIT {limit}"
@@ -49,9 +49,9 @@ def main():
     parser.add_argument('--port', required=True)
     parser.add_argument('--db', required=True)
     parser.add_argument('--tables', nargs='+', required=True)
-    parser.add_argument('--limit', type=int, help='Limit the number of records to fetch')
-    parser.add_argument('--sort_column', help='Column to sort by')
-    parser.add_argument('--sort_direction', default='asc', choices=['asc', 'desc'], help='Sort direction (asc or desc)')
+    parser.add_argument('--limit', type=int, help='Optional: Limit the number of records to fetch')
+    parser.add_argument('--sort_column', help='Optional: Column to sort by')
+    parser.add_argument('--sort_direction', default='asc', choices=['asc', 'desc'], help='Optional: Sort direction (asc or desc)')
     args = parser.parse_args()
 
     # Connect to databases

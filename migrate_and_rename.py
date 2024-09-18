@@ -13,13 +13,17 @@ def connect_postgres():
     engine_url = f"postgresql://postgres:postgres@localhost/scratchpad"
     return create_engine(engine_url)
 
-def migrate_table(sql_server_conn, pg_engine, table_name):
+def migrate_table(sql_server_conn, pg_engine, table_name, limit=None, sort_column=None, sort_direction='asc'):
     # Convert table name to lower case to avoid case sensitivity issues
     table_name = table_name.lower()
     print(f"Starting migration for table: {table_name}")
 
-    # Querying data from SQL Server
+    # Building the SQL query with optional sorting and limit
     sql_query = f"SELECT * FROM {table_name}"
+    if sort_column:
+        sql_query += f" ORDER BY {sort_column} {sort_direction}"
+    if limit:
+        sql_query += f" LIMIT {limit}"
     data = pd.read_sql(sql_query, sql_server_conn)
 
     if data.empty:
@@ -45,6 +49,9 @@ def main():
     parser.add_argument('--port', required=True)
     parser.add_argument('--db', required=True)
     parser.add_argument('--tables', nargs='+', required=True)
+    parser.add_argument('--limit', type=int, help='Limit the number of records to fetch')
+    parser.add_argument('--sort_column', help='Column to sort by')
+    parser.add_argument('--sort_direction', default='asc', choices=['asc', 'desc'], help='Sort direction (asc or desc)')
     args = parser.parse_args()
 
     # Connect to databases
@@ -53,7 +60,7 @@ def main():
 
     # Process each table
     for table in args.tables:
-        migrate_table(sql_server_conn, pg_engine, table.lower())
+        migrate_table(sql_server_conn, pg_engine, table.lower(), args.limit, args.sort_column, args.sort_direction)
 
     # Close the SQL Server connection
     sql_server_conn.close()

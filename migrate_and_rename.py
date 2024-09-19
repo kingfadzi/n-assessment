@@ -18,12 +18,13 @@ def migrate_table(sql_server_conn, pg_engine, table_name, limit=None, sort_colum
     table_name = table_name.lower()
     print(f"Starting migration for table: {table_name}")
 
-    # Building the SQL query with optional sorting and limit
+    # Building the SQL query
     sql_query = f"SELECT * FROM {table_name}"
     if sort_column and sort_direction:
         sql_query += f" ORDER BY {sort_column} {sort_direction}"
     if limit:
-        sql_query += f" LIMIT {limit}"
+        sql_query = f"SELECT TOP {limit} * FROM ({sql_query}) AS subquery"  # Nested to maintain order when using TOP
+
     data = pd.read_sql(sql_query, sql_server_conn)
 
     if data.empty:

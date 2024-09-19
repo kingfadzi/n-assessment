@@ -4,6 +4,7 @@ import pyodbc
 import pandas as pd
 from datetime import datetime, timedelta
 import argparse
+import time
 
 chunk_size = 50000  # Adjust based on your environment and data size
 
@@ -33,11 +34,14 @@ def drop_table_if_exists(engine, table_name):
         try:
             connection.execute(text(f'DROP TABLE IF EXISTS "{table_name}";'))
             transaction.commit()
+            print(f"Table '{table_name}' dropped successfully in PostgreSQL.")
         except:
             transaction.rollback()
+            print(f"Failed to drop table '{table_name}'.")
 
 def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, period_days, limit=None):
     """Fetches data from SQL Server and transfers it to PostgreSQL."""
+    start_time = time.time()
     columns = fetch_column_info(sql_conn, table_name)
     if not columns:
         print("No suitable columns found for data transfer.")
@@ -52,8 +56,11 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, period
     select_clause = f"SELECT TOP {limit} {select_columns}" if limit else f"SELECT {select_columns}"
     query = f"{select_clause} FROM [{table_name}] WHERE [{date_column}] >= ?"
 
+    print(f"Executing SQL Server query: {query}")
     sql_cursor.execute(query, (period_ago,))
+    print(f"Data fetching started...")
 
+    total_rows = 0
     with pg_engine.begin() as conn:
         while True:
             rows = sql_cursor.fetchmany(chunk_size)
@@ -69,10 +76,15 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, period
             df = pd.DataFrame(converted_rows, columns=columns)
             if not df.empty:
                 df.to_sql(table_name, con=conn, if_exists='append', index=False)
+                total_rows += len(df)
+                print(f"Inserted {len(df)} rows into PostgreSQL. Total rows inserted: {total_rows}")
             else:
                 break
 
     sql_cursor.close()
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Data transfer completed. Total rows inserted: {total_rows}. Time taken: {elapsed_time:.2f} seconds.")
 
 def main():
     """Main function to parse arguments and initiate data transfer."""

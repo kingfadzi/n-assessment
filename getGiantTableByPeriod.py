@@ -9,7 +9,11 @@ chunk_size = 50000  # Adjust based on your environment and data size
 
 def create_pg_connection():
     """Creates and returns a connection engine to the PostgreSQL database."""
-    engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres')
+    engine = create_engine(
+        'postgresql://postgres:postgres@localhost:5432/postgres',
+        isolation_level='AUTOCOMMIT',
+        echo=True  # Enable SQL logging for debugging
+    )
     return engine
 
 def fetch_column_info(sql_conn, table_name):
@@ -51,25 +55,31 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
     select_columns = ', '.join(f'"{col}"' for col in columns)
     select_clause = f"SELECT TOP {limit} {select_columns}" if limit else f"SELECT {select_columns}"
     query = f"{select_clause} FROM [{table_name}] WHERE [{date_column}] >= ?"
-    
+
     print(f"Executing SQL Server query: {query}")
     sql_cursor.execute(query, (ninety_days_ago,))
 
-    while True:
-        rows = sql_cursor.fetchmany(chunk_size)
-        if not rows:
-            break
+    with pg_engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        while True:
+            rows = sql_cursor.fetchmany(chunk_size)
+            if not rows:
+                break
 
-        # Convert Decimal types to float
-        converted_rows = [
-            [float(item) if isinstance(item, decimal.Decimal) else item for item in row]
-            for row in rows
-        ]
+            # Convert Decimal types to float
+            converted_rows = [
+                [float(item) if isinstance(item, decimal.Decimal) else item for item in row]
+                for row in rows
+            ]
 
-        df = pd.DataFrame(converted_rows, columns=columns)
-        # Write to PostgreSQL, creating the table if it doesn't exist
-        df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
-        print(f"Inserted {len(df)} rows into PostgreSQL table '{table_name}'.")
+            df = pd.DataFrame(converted_rows, columns=columns)
+            if not df.empty:
+                try:
+                    df.to_sql(table_name, con=conn, if_exists='append', index=False)
+                    print(f"Inserted {len(df)} rows into PostgreSQL table '{table_name}'.")
+                except Exception as e:
+                    print(f"Error inserting data into PostgreSQL: {e}")
+            else:
+                print("No data to write to the database.")
 
     print(f"Data transfer to PostgreSQL table '{table_name}' completed successfully.")
     sql_cursor.close()

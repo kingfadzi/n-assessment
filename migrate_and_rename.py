@@ -1,7 +1,8 @@
 import pyodbc
 import pandas as pd
 import argparse
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, event
+from sqlalchemy.engine import Engine
 
 def connect_sql_server(host, port, instance, database):
     # Setup the SQL Server connection
@@ -12,6 +13,11 @@ def connect_postgres():
     # Setup the PostgreSQL connection
     engine_url = f"postgresql://postgres:postgres@localhost/scratchpad"
     return create_engine(engine_url)
+
+# Listening for SQL statements executed by SQLAlchemy
+@event.listens_for(Engine, "before_cursor_execute")
+def receive_before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    print("Executing SQL: ", statement)
 
 def migrate_table(sql_server_conn, pg_engine, table_name, limit=None, sort_column=None, sort_direction='asc'):
     # Convert table name to lower case to avoid case sensitivity issues
@@ -46,6 +52,7 @@ def migrate_table(sql_server_conn, pg_engine, table_name, limit=None, sort_colum
 
         # Creating the table and inserting data
         data.to_sql(table_name, con=conn, index=False, if_exists='replace')
+        conn.execute(text("COMMIT;"))  # Ensuring changes are committed
         print(f"Data successfully inserted into table {table_name} in PostgreSQL.")
 
         # Verify the number of records inserted into PostgreSQL

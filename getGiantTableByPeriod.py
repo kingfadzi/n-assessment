@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from datetime import datetime, timedelta
 import pandas as pd
 import argparse
+import time
 
 # Global variable for batch processing size
 chunk_size = 50000
@@ -24,15 +25,23 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
     query = f"{select_clause} FROM {table_name} WHERE {date_column} >= ?"
     
     print(f"Executing SQL Server query: {query}")
+    start_time = time.time()  # Start timing
     sql_cursor.execute(query, (ninety_days_ago,))
     
+    # Fetch the data in batches and time the fetch process
     while True:
+        batch_start_time = time.time()
         rows = sql_cursor.fetchmany(chunk_size)
         if not rows:
             break
+        fetch_duration = time.time() - batch_start_time
+        print(f"Fetched {len(rows)} rows in {fetch_duration:.2f} seconds.")
+        
         df = pd.DataFrame(rows, columns=[desc[0] for desc in sql_cursor.description])
         df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
 
+    total_duration = time.time() - start_time  # Total duration for the retrieval
+    print(f"Total retrieval and transfer time: {total_duration:.2f} seconds.")
     sql_cursor.close()
 
 def main():

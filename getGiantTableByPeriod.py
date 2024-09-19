@@ -4,41 +4,46 @@ import pyodbc
 import pandas as pd
 from datetime import datetime, timedelta
 import argparse
+import sys
 
 chunk_size = 50000  # Adjust based on your environment and data size
 
 def create_pg_connection():
     """Creates and returns a connection engine to the PostgreSQL database."""
-    engine = create_engine(
-        'postgresql://postgres:postgres@localhost:5432/postgres',
-        isolation_level='AUTOCOMMIT',
-        echo=True  # Enable SQL logging for debugging
-    )
-    return engine
+    try:
+        engine = create_engine(
+            'postgresql://postgres:postgres@localhost:5432/postgres',
+            echo=True  # Enable SQL logging for debugging
+        )
+        return engine
+    except Exception as e:
+        print(f"Error creating PostgreSQL engine: {e}")
+        sys.exit(1)
 
 def fetch_column_info(sql_conn, table_name):
     """Retrieves column names excluding VARBINARY types."""
-    sql_cursor = sql_conn.cursor()
-    sql_cursor.execute(f"""
-        SELECT COLUMN_NAME, DATA_TYPE
-        FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_NAME = '{table_name}'
-    """)
-    columns = [row[0] for row in sql_cursor.fetchall() if 'binary' not in row[1].lower()]
-    sql_cursor.close()
-    return columns
+    try:
+        sql_cursor = sql_conn.cursor()
+        sql_cursor.execute(f"""
+            SELECT COLUMN_NAME, DATA_TYPE
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = '{table_name}'
+        """)
+        columns = [row[0] for row in sql_cursor.fetchall() if 'binary' not in row[1].lower()]
+        sql_cursor.close()
+        return columns
+    except Exception as e:
+        print(f"Error fetching column info from SQL Server: {e}")
+        sys.exit(1)
 
 def drop_table_if_exists(engine, table_name):
     """Drops the table in PostgreSQL if it exists."""
-    with engine.connect() as connection:
-        transaction = connection.begin()
-        try:
+    try:
+        with engine.connect() as connection:
             connection.execute(text(f'DROP TABLE IF EXISTS "{table_name}";'))
-            transaction.commit()
             print(f"Table '{table_name}' dropped successfully in PostgreSQL.")
-        except Exception as e:
-            print(f"Failed to drop table '{table_name}': {e}")
-            transaction.rollback()
+    except Exception as e:
+        print(f"Failed to drop table '{table_name}': {e}")
 
 def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=None):
     """Fetches data from SQL Server and transfers it to PostgreSQL."""
@@ -58,28 +63,33 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
 
     print(f"Executing SQL Server query: {query}")
     sql_cursor.execute(query, (ninety_days_ago,))
+    print("SQL Server query executed successfully.")
 
-    with pg_engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
-        while True:
-            rows = sql_cursor.fetchmany(chunk_size)
-            if not rows:
-                break
+    # Start PostgreSQL transaction
+    with pg_engine.begin() as conn:
+        try:
+            while True:
+                rows = sql_cursor.fetchmany(chunk_size)
+                if not rows:
+                    break
 
-            # Convert Decimal types to float
-            converted_rows = [
-                [float(item) if isinstance(item, decimal.Decimal) else item for item in row]
-                for row in rows
-            ]
+                # Convert Decimal types to float
+                converted_rows = [
+                    [float(item) if isinstance(item, decimal.Decimal) else item for item in row]
+                    for row in rows
+                ]
 
-            df = pd.DataFrame(converted_rows, columns=columns)
-            if not df.empty:
-                try:
+                df = pd.DataFrame(converted_rows, columns=columns)
+                if not df.empty:
+                    print(f"Inserting {len(df)} rows into PostgreSQL table '{table_name}'...")
                     df.to_sql(table_name, con=conn, if_exists='append', index=False)
-                    print(f"Inserted {len(df)} rows into PostgreSQL table '{table_name}'.")
-                except Exception as e:
-                    print(f"Error inserting data into PostgreSQL: {e}")
-            else:
-                print("No data to write to the database.")
+                    print(f"Inserted {len(df)} rows.")
+                else:
+                    print("No data to write to the database.")
+
+        except Exception as e:
+            print(f"Error during data transfer: {e}")
+            sys.exit(1)
 
     print(f"Data transfer to PostgreSQL table '{table_name}' completed successfully.")
     sql_cursor.close()
@@ -96,17 +106,29 @@ def main():
     parser.add_argument('--limit', type=int, help='Optional: Limit the number of records to fetch')
     args = parser.parse_args()
 
+    # Build SQL Server connection string
     conn_str = (
         f'DRIVER={{ODBC Driver 17 for SQL Server}};'
         f'SERVER={args.host}\\{args.instance},{args.port};'
         f'DATABASE={args.db};'
         f'Trusted_Connection=yes;'
     )
-    sql_connection = pyodbc.connect(conn_str)
-    pg_engine = create_pg_connection()
 
+    # Establish connections
+    try:
+        sql_connection = pyodbc.connect(conn_str)
+        print("Connected to SQL Server successfully.")
+    except Exception as e:
+        print(f"Error connecting to SQL Server: {e}")
+        sys.exit(1)
+
+    pg_engine = create_pg_connection()
+    print("Connected to PostgreSQL successfully.")
+
+    # Perform data transfer
     fetch_and_transfer_data(sql_connection, pg_engine, args.table, args.datecol, args.limit)
 
+    # Close connections
     sql_connection.close()
     pg_engine.dispose()
 

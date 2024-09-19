@@ -1,6 +1,6 @@
 import pyodbc
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from datetime import datetime, timedelta
 import argparse
 import time
@@ -12,20 +12,36 @@ def create_pg_connection():
     engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres')
     return engine
 
+def drop_table_if_exists(engine, table_name):
+    """Drops the table in PostgreSQL if it exists."""
+    with engine.connect() as connection:
+        transaction = connection.begin()
+        try:
+            connection.execute(text(f"DROP TABLE IF EXISTS {table_name};"))
+            transaction.commit()  # Committing the transaction if successful
+        except Exception as e:
+            print(f"Failed to drop table {table_name}: {e}")
+            transaction.rollback()  # Rolling back in case of error
+
 def fetch_column_info(sql_conn, table_name):
-    """Fetches column information to determine which are VARBINARY."""
+    """Fetches column information to determine which are not VARBINARY."""
     sql_cursor = sql_conn.cursor()
     sql_cursor.execute(f"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name}'")
-    columns = [row[0] for row in sql_cursor.fetchall() if row[1] != 'varbinary']
+    columns = [row[0] for row in sql_cursor.fetchall() if 'binary' not in row[1]]
     sql_cursor.close()
     return columns
 
 def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=None):
+    # Drop the existing table if it exists
+    drop_table_if_exists(pg_engine, table_name)
+
+    # Fetch column information excluding VARBINARY types
     columns = fetch_column_info(sql_conn, table_name)
     if not columns:
         print("No suitable columns found for data transfer.")
         return
 
+    # Prepare and execute the data fetching query
     sql_cursor = sql_conn.cursor()
     ninety_days_ago = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     select_clause = f"SELECT TOP {limit} {', '.join(columns)}" if limit else f"SELECT {', '.join(columns)}"

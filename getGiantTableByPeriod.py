@@ -32,21 +32,19 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
     query = f"{select_clause} FROM {table_name} WHERE {date_column} >= ?"
     
     print(f"Executing SQL Server query: {query}")
-    start_time = time.time()  # Start timing
     sql_cursor.execute(query, (ninety_days_ago,))
-    
-    # Fetch the data in batches
-    first_pass = True
+
+    # Get column names from the cursor description
+    columns = [desc[0] for desc in sql_cursor.description]
+    print(f"Expected columns: {columns}")
+
     while True:
         rows = sql_cursor.fetchmany(chunk_size)
         if not rows:
             break
-        if first_pass:
-            columns = [desc[0] for desc in sql_cursor.description]
-            print(f"Columns detected: {columns}")
-            first_pass = False
-        
-        # Attempt to create DataFrame
+
+        print(f"Sample data fetched: {rows[:1]}")  # Print the first row to inspect its structure
+
         try:
             df = pd.DataFrame(rows, columns=columns)
             df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
@@ -54,8 +52,6 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
             print(f"Failed to create DataFrame or transfer to PostgreSQL: {e}")
             break
 
-    total_duration = time.time() - start_time  # Total duration for the retrieval
-    print(f"Total retrieval and transfer time: {total_duration:.2f} seconds.")
     sql_cursor.close()
 
 

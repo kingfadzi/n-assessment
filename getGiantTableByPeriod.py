@@ -1,8 +1,7 @@
 import pyodbc
-import psycopg2
-from sqlalchemy import create_engine
-from datetime import datetime, timedelta
 import pandas as pd
+from sqlalchemy import create_engine, text
+from datetime import datetime, timedelta
 import argparse
 import time
 
@@ -10,15 +9,24 @@ import time
 chunk_size = 50000
 
 def create_pg_connection():
+    """Creates and returns a connection engine to the PostgreSQL database."""
     # PostgreSQL connection using SQLAlchemy for handling larger datasets efficiently
     engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres')
     return engine
 
 def drop_table_if_exists(engine, table_name):
-    with engine.begin() as connection:  # Ensures transactional integrity
-        connection.execute(f"DROP TABLE IF EXISTS {table_name};")
+    """Drops the table if it exists in the PostgreSQL database."""
+    with engine.connect() as connection:
+        transaction = connection.begin()
+        try:
+            connection.execute(text(f"DROP TABLE IF EXISTS {table_name};"))
+            transaction.commit()  # Committing the transaction if successful
+        except Exception as e:
+            print(f"Failed to drop table {table_name}: {e}")
+            transaction.rollback()  # Rolling back in case of error
 
 def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=None):
+    """Fetches data from SQL Server and transfers it to PostgreSQL."""
     sql_cursor = sql_conn.cursor()
     ninety_days_ago = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     select_clause = f"SELECT TOP {limit} *" if limit else "SELECT *"
@@ -28,7 +36,6 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
     start_time = time.time()  # Start timing
     sql_cursor.execute(query, (ninety_days_ago,))
     
-    # Fetch the data in batches and time the fetch process
     while True:
         batch_start_time = time.time()
         rows = sql_cursor.fetchmany(chunk_size)
@@ -45,6 +52,7 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
     sql_cursor.close()
 
 def main():
+    """Main function to handle argument parsing and orchestrate data fetching and transferring."""
     parser = argparse.ArgumentParser(description='Fetch data from the last 90 days from SQL Server and transfer to PostgreSQL.')
     parser.add_argument('--host', required=True)
     parser.add_argument('--instance', required=True)

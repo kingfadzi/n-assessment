@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Hard-coded database connection parameters
+# Hard-coded database connection parameters for SQL Server
 HOST="your_host"
 INSTANCE="your_instance"
 PORT="your_port"
-DB="your_database"
+DB="your_db"
 
-# Check if the necessary parameters are provided
+# Check if the necessary parameters for the table are provided
 if [ $# -lt 2 ]; then
   echo "Usage: $0 <table> <datecol> [limit]"
   exit 1

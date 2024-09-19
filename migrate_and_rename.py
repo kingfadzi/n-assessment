@@ -26,7 +26,11 @@ def migrate_table(sql_server_conn, pg_engine, table_name, limit=None, sort_colum
     if sort_column:
         sql_query += f" ORDER BY {sort_column} {sort_direction}"
 
+    print(f"Executing SQL query: {sql_query}")
     data = pd.read_sql(sql_query, sql_server_conn)
+
+    num_records_retrieved = len(data)
+    print(f"Retrieved {num_records_retrieved} records from {table_name} in SQL Server.")
 
     if data.empty:
         print(f"No data found in {table_name}. Skipping.")
@@ -38,11 +42,16 @@ def migrate_table(sql_server_conn, pg_engine, table_name, limit=None, sort_colum
     with pg_engine.connect() as conn:
         # Dropping the table if exists in PostgreSQL
         conn.execute(text(f"DROP TABLE IF EXISTS {table_name};"))
-        print(f"Dropped table {table_name} if it existed.")
+        print(f"Dropped table {table_name} if it existed in PostgreSQL.")
 
         # Creating the table and inserting data
         data.to_sql(table_name, con=conn, index=False, if_exists='replace')
-        print(f"Data inserted into table {table_name}.")
+        print(f"Data successfully inserted into table {table_name} in PostgreSQL.")
+
+        # Verify the number of records inserted into PostgreSQL
+        result = conn.execute(text(f"SELECT COUNT(*) FROM {table_name};"))
+        records_in_pg = result.fetchone()[0]
+        print(f"PostgreSQL table {table_name} now has {records_in_pg} records.")
 
 def main():
     parser = argparse.ArgumentParser(description='Migrate tables from SQL Server to PostgreSQL.')

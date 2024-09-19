@@ -1,37 +1,42 @@
 import pyodbc
+import psycopg2
+from sqlalchemy import create_engine
 from datetime import datetime, timedelta
+import pandas as pd
 import argparse
 
-def fetch_data(connection, table_name, date_column, limit=None):
-    cursor = connection.cursor()
-    
-    # Calculate the date 90 days ago from today
-    ninety_days_ago = datetime.now() - timedelta(days=90)
-    ninety_days_ago_formatted = ninety_days_ago.strftime('%Y-%m-%d')
-    
-    # Build SQL Query to fetch the data
+# Global variable for batch processing size
+chunk_size = 50000
+
+def create_pg_connection():
+    # PostgreSQL connection using SQLAlchemy for handling larger datasets efficiently
+    engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres')
+    return engine
+
+def drop_table_if_exists(engine, table_name):
+    with engine.begin() as connection:  # Ensures transactional integrity
+        connection.execute(f"DROP TABLE IF EXISTS {table_name};")
+
+def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=None):
+    sql_cursor = sql_conn.cursor()
+    ninety_days_ago = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     select_clause = f"SELECT TOP {limit} *" if limit else "SELECT *"
-    query = f"""
-    {select_clause}
-    FROM {table_name}
-    WHERE {date_column} >= ?
-    """
+    query = f"{select_clause} FROM {table_name} WHERE {date_column} >= ?"
     
-    print(f"Executing query: {query}")
-    cursor.execute(query, (ninety_days_ago_formatted,))
+    print(f"Executing SQL Server query: {query}")
+    sql_cursor.execute(query, (ninety_days_ago,))
     
-    # Fetch and print the data
     while True:
-        rows = cursor.fetchmany(5000)  # Adjust the batch size based on your needs
+        rows = sql_cursor.fetchmany(chunk_size)
         if not rows:
             break
-        for row in rows:
-            print(row)
+        df = pd.DataFrame(rows, columns=[desc[0] for desc in sql_cursor.description])
+        df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
 
-    cursor.close()
+    sql_cursor.close()
 
 def main():
-    parser = argparse.ArgumentParser(description='Fetch data from the last 90 days from SQL Server.')
+    parser = argparse.ArgumentParser(description='Fetch data from the last 90 days from SQL Server and transfer to PostgreSQL.')
     parser.add_argument('--host', required=True)
     parser.add_argument('--instance', required=True)
     parser.add_argument('--port', required=True)
@@ -41,13 +46,20 @@ def main():
     parser.add_argument('--limit', type=int, help='Optional: Limit the number of records to fetch')
     args = parser.parse_args()
 
+    # SQL Server connection string
     conn_str = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={args.host}\\{args.instance},{args.port};DATABASE={args.db};Trusted_Connection=yes;'
-    connection = pyodbc.connect(conn_str)
+    sql_connection = pyodbc.connect(conn_str)
     
-    print(f"Fetching data from table: {args.table}")
-    fetch_data(connection, args.table, args.datecol, args.limit)
+    # PostgreSQL connection
+    pg_engine = create_pg_connection()
 
-    connection.close()
+    # Drop existing table and transfer new data
+    drop_table_if_exists(pg_engine, args.table)
+    fetch_and_transfer_data(sql_connection, pg_engine, args.table, args.datecol, args.limit)
+
+    # Close connections
+    sql_connection.close()
+    pg_engine.dispose()
 
 if __name__ == "__main__":
     main()

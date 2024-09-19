@@ -26,7 +26,6 @@ def drop_table_if_exists(engine, table_name):
             transaction.rollback()  # Rolling back in case of error
 
 def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=None):
-    """Fetches data from SQL Server and transfers it to PostgreSQL."""
     sql_cursor = sql_conn.cursor()
     ninety_days_ago = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     select_clause = f"SELECT TOP {limit} *" if limit else "SELECT *"
@@ -36,20 +35,29 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
     start_time = time.time()  # Start timing
     sql_cursor.execute(query, (ninety_days_ago,))
     
+    # Fetch the data in batches
+    first_pass = True
     while True:
-        batch_start_time = time.time()
         rows = sql_cursor.fetchmany(chunk_size)
         if not rows:
             break
-        fetch_duration = time.time() - batch_start_time
-        print(f"Fetched {len(rows)} rows in {fetch_duration:.2f} seconds.")
+        if first_pass:
+            columns = [desc[0] for desc in sql_cursor.description]
+            print(f"Columns detected: {columns}")
+            first_pass = False
         
-        df = pd.DataFrame(rows, columns=[desc[0] for desc in sql_cursor.description])
-        df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
+        # Attempt to create DataFrame
+        try:
+            df = pd.DataFrame(rows, columns=columns)
+            df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
+        except Exception as e:
+            print(f"Failed to create DataFrame or transfer to PostgreSQL: {e}")
+            break
 
     total_duration = time.time() - start_time  # Total duration for the retrieval
     print(f"Total retrieval and transfer time: {total_duration:.2f} seconds.")
     sql_cursor.close()
+
 
 def main():
     """Main function to handle argument parsing and orchestrate data fetching and transferring."""

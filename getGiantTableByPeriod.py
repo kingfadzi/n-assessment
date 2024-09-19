@@ -32,16 +32,12 @@ def fetch_column_info(sql_conn, table_name):
     return columns
 
 def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=None):
-    # Drop the existing table if it exists
-    drop_table_if_exists(pg_engine, table_name)
-
     # Fetch column information excluding VARBINARY types
     columns = fetch_column_info(sql_conn, table_name)
     if not columns:
         print("No suitable columns found for data transfer.")
         return
 
-    # Prepare and execute the data fetching query
     sql_cursor = sql_conn.cursor()
     ninety_days_ago = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     select_clause = f"SELECT TOP {limit} {', '.join(columns)}" if limit else f"SELECT {', '.join(columns)}"
@@ -50,24 +46,20 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
     print(f"Executing SQL Server query: {query}")
     sql_cursor.execute(query, (ninety_days_ago,))
 
-    while True:
-        rows = sql_cursor.fetchmany(chunk_size)
-        if not rows:
-            break
-        
+    try:
+        # Fetch all at once if data size is manageable, otherwise use fetchmany in a loop
+        rows = sql_cursor.fetchall()
         print(f"Fetched {len(rows)} rows")  # Debug: Check how many rows are fetched
-        print(f"Data sample: {rows[0]}")  # Debug: Inspect the first row of fetched data
-        print(f"Expected columns: {columns}")  # Debug: Print expected column names
-        
-        try:
-            df = pd.DataFrame(rows, columns=columns)
-            print("DataFrame created successfully.")  # Confirm successful DataFrame creation
-            df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
-        except Exception as e:
-            print(f"Failed to create DataFrame or transfer to PostgreSQL: {e}")
-            break
+        if rows:
+            print(f"Sample data: {rows[0]}")  # Debug: Inspect the first row of fetched data
+        df = pd.DataFrame(rows, columns=columns)
+        df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
+        print("Data transferred successfully to PostgreSQL.")
+    except Exception as e:
+        print(f"Failed to create DataFrame or transfer to PostgreSQL: {e}")
+    finally:
+        sql_cursor.close()
 
-    sql_cursor.close()
 
 
 def main():

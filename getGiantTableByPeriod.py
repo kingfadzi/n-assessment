@@ -49,16 +49,26 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
     
     print(f"Executing SQL Server query: {query}")
     sql_cursor.execute(query, (ninety_days_ago,))
-    
+
     while True:
         rows = sql_cursor.fetchmany(chunk_size)
         if not rows:
             break
         
-        df = pd.DataFrame(rows, columns=columns)
-        df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
+        print(f"Fetched {len(rows)} rows")  # Debug: Check how many rows are fetched
+        print(f"Data sample: {rows[0]}")  # Debug: Inspect the first row of fetched data
+        print(f"Expected columns: {columns}")  # Debug: Print expected column names
+        
+        try:
+            df = pd.DataFrame(rows, columns=columns)
+            print("DataFrame created successfully.")  # Confirm successful DataFrame creation
+            df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
+        except Exception as e:
+            print(f"Failed to create DataFrame or transfer to PostgreSQL: {e}")
+            break
 
     sql_cursor.close()
+
 
 def main():
     parser = argparse.ArgumentParser(description='Fetch and transfer specified data excluding binary columns.')

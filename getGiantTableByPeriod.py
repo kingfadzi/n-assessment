@@ -1,73 +1,97 @@
+import decimal
+from sqlalchemy import create_engine, text
 import pyodbc
 import pandas as pd
-from sqlalchemy import create_engine, text
 from datetime import datetime, timedelta
 import argparse
 
-chunk_size = 50000  # Global variable for batch processing size
+chunk_size = 50000  # Adjust based on your environment and data size
 
 def create_pg_connection():
-    """ Creates a connection to the PostgreSQL database. """
+    """Creates and returns a connection engine to the PostgreSQL database."""
     engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres')
     return engine
 
-def recreate_table(engine, table_name, columns):
-    """ Drops the table if exists and recreates it with the specified columns in PostgreSQL. """
-    with engine.connect() as connection:
-        transaction = connection.begin()
-        try:
-            connection.execute(text(f"DROP TABLE IF EXISTS {table_name};"))
-            # Assuming columns is a dictionary with column names and SQL types
-            col_definitions = ', '.join([f"{name} {type}" for name, type in columns.items()])
-            connection.execute(text(f"CREATE TABLE {table_name} ({col_definitions});"))
-            transaction.commit()  # Committing the transaction if successful
-        except Exception as e:
-            print(f"Failed to recreate table {table_name}: {e}")
-            transaction.rollback()  # Rolling back in case of error
-
 def fetch_column_info(sql_conn, table_name):
-    """ Retrieves column information to exclude VARBINARY types and for table creation. """
+    """Retrieves column names excluding VARBINARY types."""
     sql_cursor = sql_conn.cursor()
-    sql_cursor.execute(f"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name}'")
-    columns = {row[0]: row[1] for row in sql_cursor.fetchall() if 'binary' not in row[1].lower()}
+    sql_cursor.execute(f"""
+        SELECT COLUMN_NAME, DATA_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = '{table_name}'
+    """)
+    columns = [row[0] for row in sql_cursor.fetchall() if 'binary' not in row[1].lower()]
     sql_cursor.close()
     return columns
 
+def drop_table_if_exists(engine, table_name):
+    """Drops the table in PostgreSQL if it exists."""
+    with engine.connect() as connection:
+        transaction = connection.begin()
+        try:
+            connection.execute(text(f'DROP TABLE IF EXISTS "{table_name}";'))
+            transaction.commit()
+            print(f"Table '{table_name}' dropped successfully in PostgreSQL.")
+        except Exception as e:
+            print(f"Failed to drop table '{table_name}': {e}")
+            transaction.rollback()
+
 def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=None):
+    """Fetches data from SQL Server and transfers it to PostgreSQL."""
     columns = fetch_column_info(sql_conn, table_name)
     if not columns:
         print("No suitable columns found for data transfer.")
         return
 
-    recreate_table(pg_engine, table_name, columns)  # Drop and recreate table
+    # Drop the PostgreSQL table if it exists
+    drop_table_if_exists(pg_engine, table_name)
 
     sql_cursor = sql_conn.cursor()
-    ninety_days_ago = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
-    column_names = ', '.join(columns.keys())
-    select_clause = f"SELECT TOP {limit} {column_names}" if limit else f"SELECT {column_names}"
-    query = f"{select_clause} FROM {table_name} WHERE {date_column} >= ?"
+    ninety_days_ago = datetime.now() - timedelta(days=90)
+    select_columns = ', '.join(f'"{col}"' for col in columns)
+    select_clause = f"SELECT TOP {limit} {select_columns}" if limit else f"SELECT {select_columns}"
+    query = f"{select_clause} FROM [{table_name}] WHERE [{date_column}] >= ?"
     
     print(f"Executing SQL Server query: {query}")
     sql_cursor.execute(query, (ninety_days_ago,))
 
-    rows = sql_cursor.fetchall()
-    df = pd.DataFrame(rows, columns=columns.keys())
-    df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
+    while True:
+        rows = sql_cursor.fetchmany(chunk_size)
+        if not rows:
+            break
 
+        # Convert Decimal types to float
+        converted_rows = [
+            [float(item) if isinstance(item, decimal.Decimal) else item for item in row]
+            for row in rows
+        ]
+
+        df = pd.DataFrame(converted_rows, columns=columns)
+        # Write to PostgreSQL, creating the table if it doesn't exist
+        df.to_sql(table_name, con=pg_engine, if_exists='append', index=False)
+        print(f"Inserted {len(df)} rows into PostgreSQL table '{table_name}'.")
+
+    print(f"Data transfer to PostgreSQL table '{table_name}' completed successfully.")
     sql_cursor.close()
 
 def main():
-    parser = argparse.ArgumentParser(description='Fetch and transfer specified data after recreating the table.')
-    parser.add_argument('--host', required=True)
-    parser.add_argument('--instance', required=True)
-    parser.add_argument('--port', required=True)
-    parser.add_argument('--db', required=True)
-    parser.add_argument('--table', required=True)
-    parser.add_argument('--datecol', required=True)
+    """Main function to parse arguments and initiate data transfer."""
+    parser = argparse.ArgumentParser(description='Fetch and transfer data excluding binary columns.')
+    parser.add_argument('--host', required=True, help='SQL Server host')
+    parser.add_argument('--instance', required=True, help='SQL Server instance name')
+    parser.add_argument('--port', required=True, help='SQL Server port')
+    parser.add_argument('--db', required=True, help='SQL Server database name')
+    parser.add_argument('--table', required=True, help='Table name to fetch data from')
+    parser.add_argument('--datecol', required=True, help='Date column to filter records from the last 90 days')
     parser.add_argument('--limit', type=int, help='Optional: Limit the number of records to fetch')
     args = parser.parse_args()
 
-    conn_str = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={args.host}\\{args.instance},{args.port};DATABASE={args.db};Trusted_Connection=yes;'
+    conn_str = (
+        f'DRIVER={{ODBC Driver 17 for SQL Server}};'
+        f'SERVER={args.host}\\{args.instance},{args.port};'
+        f'DATABASE={args.db};'
+        f'Trusted_Connection=yes;'
+    )
     sql_connection = pyodbc.connect(conn_str)
     pg_engine = create_pg_connection()
 

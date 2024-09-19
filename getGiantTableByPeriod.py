@@ -36,7 +36,7 @@ def drop_table_if_exists(engine, table_name):
         except:
             transaction.rollback()
 
-def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=None):
+def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, period_days, limit=None):
     """Fetches data from SQL Server and transfers it to PostgreSQL."""
     columns = fetch_column_info(sql_conn, table_name)
     if not columns:
@@ -47,12 +47,12 @@ def fetch_and_transfer_data(sql_conn, pg_engine, table_name, date_column, limit=
     drop_table_if_exists(pg_engine, table_name)
 
     sql_cursor = sql_conn.cursor()
-    ninety_days_ago = datetime.now() - timedelta(days=90)
+    period_ago = datetime.now() - timedelta(days=period_days)
     select_columns = ', '.join(f'"{col}"' for col in columns)
     select_clause = f"SELECT TOP {limit} {select_columns}" if limit else f"SELECT {select_columns}"
     query = f"{select_clause} FROM [{table_name}] WHERE [{date_column}] >= ?"
 
-    sql_cursor.execute(query, (ninety_days_ago,))
+    sql_cursor.execute(query, (period_ago,))
 
     with pg_engine.begin() as conn:
         while True:
@@ -82,7 +82,8 @@ def main():
     parser.add_argument('--port', required=True, help='SQL Server port')
     parser.add_argument('--db', required=True, help='SQL Server database name')
     parser.add_argument('--table', required=True, help='Table name to fetch data from')
-    parser.add_argument('--datecol', required=True, help='Date column to filter records from the last 90 days')
+    parser.add_argument('--datecol', required=True, help='Date column to filter records')
+    parser.add_argument('--period', type=int, default=90, help='Number of days to look back for data (default: 90)')
     parser.add_argument('--limit', type=int, help='Optional: Limit the number of records to fetch')
     args = parser.parse_args()
 
@@ -99,7 +100,14 @@ def main():
     pg_engine = create_pg_connection()
 
     # Perform data transfer
-    fetch_and_transfer_data(sql_connection, pg_engine, args.table, args.datecol, args.limit)
+    fetch_and_transfer_data(
+        sql_connection,
+        pg_engine,
+        args.table,
+        args.datecol,
+        args.period,
+        args.limit
+    )
 
     # Close connections
     sql_connection.close()

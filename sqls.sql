@@ -3,6 +3,7 @@ SELECT
     s.agent_version AS agent_id,
     COUNT(DISTINCT s.id) AS total_servers,
     COUNT(DISTINCT CASE WHEN s.reachable = true THEN s.id END) AS reachable_servers,
+    COUNT(DISTINCT CASE WHEN s.reachable = false THEN s.id END) AS unreachable_servers,
     ROUND((COUNT(DISTINCT CASE WHEN s.reachable = true THEN s.id END) * 100.0 / COUNT(DISTINCT s.id)), 2) AS utilization_percentage
 FROM
     servers s
